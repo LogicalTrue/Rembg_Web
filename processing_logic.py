@@ -243,20 +243,21 @@ def procesar_video(ruta_video, ruta_salida_frames, fps, quitar_fondo, redimensio
         progress_queue.put((0, 0, f"Error: {str(e)}"))
 
 
-def procesar_imagen_web(input_bytes, redimensionar=False, ancho=512, alto=512, anchor_bottom_center=False):
+def procesar_imagen_web(input_bytes, redimensionar=False, ancho=512, alto=512, anchor_bottom_center=False, session=None):
     """
     Función exclusiva para la API web. 
-    Procesa una imagen en memoria (RAM) sin tocar el disco rígido.
+    Procesa una imagen en memoria (RAM) usando la sesión de IA compartida.
     """
     try:
         from rembg import remove
         from PIL import Image
         from io import BytesIO
         
-        # 1. Quitar fondo directamente de los bytes
-        subject_bytes = remove(input_bytes)
+        # 1. Quitar fondo usando la sesión liviana (session)
+        # Si por alguna razón session es None, remove usará el modelo por defecto
+        subject_bytes = remove(input_bytes, session=session)
         
-        # 2. Si hay que redimensionar, usamos tu lógica existente
+        # 2. Lógica de redimensión (se mantiene igual)
         if redimensionar or anchor_bottom_center:
             img = Image.open(BytesIO(subject_bytes))
             img_final = _aplicar_transformacion_pil(
@@ -277,4 +278,4 @@ def procesar_imagen_web(input_bytes, redimensionar=False, ancho=512, alto=512, a
         
     except Exception as e:
         escribir_log(f"Error en procesar_imagen_web: {e}")
-        raise e # FastAPI ataja este error y le avisa al frontend
+        raise e
